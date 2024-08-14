@@ -98,7 +98,7 @@ func (w *ExecutionPayloadWithdrawals) HashTreeRootWith(hh ssz.HashWalker) (err e
 	{
 		subIndx := hh.Index()
 		num := uint64(len(w.Withdrawals))
-		if num > 16 {
+		if num > 8 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
@@ -107,7 +107,7 @@ func (w *ExecutionPayloadWithdrawals) HashTreeRootWith(hh ssz.HashWalker) (err e
 				return
 			}
 		}
-		hh.MerkleizeWithMixin(subIndx, num, 16)
+		hh.MerkleizeWithMixin(subIndx, num, 8)
 	}
 
 	hh.Merkleize(indx)

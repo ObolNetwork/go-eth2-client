@@ -97,8 +97,8 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (14) 'Withdrawals'
-	if size := len(e.Withdrawals); size > 16 {
-		err = ssz.ErrListTooBigFn("ExecutionPayload.Withdrawals", size, 16)
+	if size := len(e.Withdrawals); size > 8 {
+		err = ssz.ErrListTooBigFn("ExecutionPayload.Withdrawals", size, 8)
 		return
 	}
 	for ii := 0; ii < len(e.Withdrawals); ii++ {
@@ -334,7 +334,7 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	{
 		subIndx := hh.Index()
 		num := uint64(len(e.Withdrawals))
-		if num > 16 {
+		if num > 8 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
@@ -343,7 +343,7 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 				return
 			}
 		}
-		hh.MerkleizeWithMixin(subIndx, num, 16)
+		hh.MerkleizeWithMixin(subIndx, num, 8)
 	}
 
 	hh.Merkleize(indx)
