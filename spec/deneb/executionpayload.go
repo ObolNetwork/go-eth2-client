@@ -29,17 +29,17 @@ type ExecutionPayload struct {
 	FeeRecipient  bellatrix.ExecutionAddress `ssz-size:"20"`
 	StateRoot     phase0.Root                `ssz-size:"32"`
 	ReceiptsRoot  phase0.Root                `ssz-size:"32"`
-	LogsBloom     [256]byte                  `ssz-size:"256"`
+	LogsBloom     [256]byte                  `ssz-size:"256" dynssz-size:"BYTES_PER_LOGS_BLOOM"`
 	PrevRandao    [32]byte                   `ssz-size:"32"`
 	BlockNumber   uint64
 	GasLimit      uint64
 	GasUsed       uint64
 	Timestamp     uint64
-	ExtraData     []byte                  `ssz-max:"32"`
+	ExtraData     []byte                  `ssz-max:"32" dynssz-size:"MAX_EXTRA_DATA_BYTES"`
 	BaseFeePerGas *uint256.Int            `ssz-size:"32"`
 	BlockHash     phase0.Hash32           `ssz-size:"32"`
-	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-	Withdrawals   []*capella.Withdrawal   `ssz-max:"16"`
+	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?" dynssz-size:"MAX_TRANSACTIONS_PER_PAYLOAD,1073741824"`
+	Withdrawals   []*capella.Withdrawal   `ssz-max:"16" dynssz-size:"MAX_WITHDRAWALS_PER_PAYLOAD"`
 	BlobGasUsed   uint64
 	ExcessBlobGas uint64
 }
