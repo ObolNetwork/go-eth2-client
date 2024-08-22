@@ -8,7 +8,7 @@ func (b *GnosisBeaconBlock) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 
-	*b = stdBBToGnosis(ep)
+	*b = BeaconBlockToGnosis(ep)
 
 	return nil
 }
@@ -33,7 +33,7 @@ func (b *GnosisBeaconBlock) UnmarshalYAML(input []byte) error {
 		return err
 	}
 
-	*b = stdBBToGnosis(ep)
+	*b = BeaconBlockToGnosis(ep)
 
 	return nil
 }
@@ -216,7 +216,8 @@ func gnosisBBToStd(gb GnosisBeaconBlock) BeaconBlock {
 	}
 }
 
-func stdBBToGnosis(b BeaconBlock) GnosisBeaconBlock {
+// BeaconBlockToGnosis returns b's data under a GnosisBeaconBlock.
+func BeaconBlockToGnosis(b BeaconBlock) GnosisBeaconBlock {
 	body := stdBBBToGnosis(*b.Body)
 
 	return GnosisBeaconBlock{
