@@ -240,8 +240,8 @@ func (s *Sleepy) AttestationPool(ctx context.Context,
 	return next.AttestationPool(ctx, opts)
 }
 
-// SubmitAttestations submits attestations.
-func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
+// SubmitAttestations submits attestations to v1 beacon node endpoint.
+func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {
@@ -249,6 +249,17 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations *api.Submi
 	}
 
 	return next.SubmitAttestations(ctx, attestations)
+}
+
+// SubmitAttestationsV2 submits attestations to v2 beacon node endpoint.
+func (s *Sleepy) SubmitAttestationsV2(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitAttestationsV2(ctx, attestations)
 }
 
 // AttesterDuties obtains attester duties.

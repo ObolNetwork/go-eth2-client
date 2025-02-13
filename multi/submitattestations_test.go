@@ -15,13 +15,13 @@ package multi_test
 
 import (
 	"context"
-	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec"
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -52,6 +52,38 @@ func TestSubmitAttestations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	for i := 0; i < 128; i++ {
+		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{})
+		require.NoError(t, err)
+	}
+	// At this point we expect mock 3 to be in active (unless probability hates us).
+	require.Equal(t, "mock 3", multiClient.Address())
+}
+
+func TestSubmitAttestationsV2(t *testing.T) {
+	ctx := context.Background()
+
+	client1, err := mock.New(ctx, mock.WithName("mock 1"))
+	require.NoError(t, err)
+	erroringClient1, err := testclients.NewErroring(ctx, 0.1, client1)
+	require.NoError(t, err)
+	client2, err := mock.New(ctx, mock.WithName("mock 2"))
+	require.NoError(t, err)
+	erroringClient2, err := testclients.NewErroring(ctx, 0.1, client2)
+	require.NoError(t, err)
+	client3, err := mock.New(ctx, mock.WithName("mock 3"))
+	require.NoError(t, err)
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{
+			erroringClient1,
+			erroringClient2,
+			client3,
+		}),
+	)
+	require.NoError(t, err)
+
 	versionedAttestations := []*spec.VersionedAttestation{
 		{Version: spec.DataVersionPhase0, Phase0: &phase0.Attestation{}},
 	}
@@ -59,7 +91,7 @@ func TestSubmitAttestations(t *testing.T) {
 		Attestations: versionedAttestations,
 	}
 	for i := 0; i < 128; i++ {
-		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, opts)
+		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestationsV2(ctx, opts)
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).
