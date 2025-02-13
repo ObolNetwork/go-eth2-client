@@ -58,3 +58,36 @@ func TestAggregateAttestation(t *testing.T) {
 	// At this point we expect mock 3 to be in active (unless probability hates us).
 	require.Equal(t, "mock 3", multiClient.Address())
 }
+
+func TestAggregateAttestationV2(t *testing.T) {
+	ctx := context.Background()
+
+	client1, err := mock.New(ctx, mock.WithName("mock 1"))
+	require.NoError(t, err)
+	erroringClient1, err := testclients.NewErroring(ctx, 0.1, client1)
+	require.NoError(t, err)
+	client2, err := mock.New(ctx, mock.WithName("mock 2"))
+	require.NoError(t, err)
+	erroringClient2, err := testclients.NewErroring(ctx, 0.1, client2)
+	require.NoError(t, err)
+	client3, err := mock.New(ctx, mock.WithName("mock 3"))
+	require.NoError(t, err)
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{
+			erroringClient1,
+			erroringClient2,
+			client3,
+		}),
+	)
+	require.NoError(t, err)
+
+	for i := 0; i < 128; i++ {
+		res, err := multiClient.(consensusclient.AggregateAttestationProvider).AggregateAttestationV2(ctx, &api.AggregateAttestationOpts{})
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	}
+	// At this point we expect mock 3 to be in active (unless probability hates us).
+	require.Equal(t, "mock 3", multiClient.Address())
+}

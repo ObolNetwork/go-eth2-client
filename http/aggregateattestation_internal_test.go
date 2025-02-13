@@ -14,12 +14,13 @@
 package http
 
 import (
+	"testing"
+
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func TestAggregateAttestationDecode(t *testing.T) {
+func TestAggregateAttestationV2Decode(t *testing.T) {
 	responseJson := `{
   "version": "Electra",
   "data": {
@@ -47,7 +48,7 @@ func TestAggregateAttestationDecode(t *testing.T) {
 			// consensusVersion: spec.DataVersionElectra,
 			body: []byte(responseJson),
 		}
-		data, metadata, err := decodeAggregateAttestation(&response)
+		data, metadata, err := decodeAggregateAttestationV2(&response)
 		require.NoError(t, err)
 
 		require.Equal(t, data.Version, spec.DataVersionElectra)

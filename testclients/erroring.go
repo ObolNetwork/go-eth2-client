@@ -197,8 +197,26 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
-// AggregateAttestation fetches the aggregate attestation for the given options.
+// AggregateAttestation fetches the aggregate attestation given an attestation to v1 beacon node endpoint.
 func (s *Erroring) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.AggregateAttestation(ctx, opts)
+}
+
+// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+func (s *Erroring) AggregateAttestationV2(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
@@ -212,7 +230,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context,
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.AggregateAttestation(ctx, opts)
+	return next.AggregateAttestationV2(ctx, opts)
 }
 
 // SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.

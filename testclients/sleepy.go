@@ -181,8 +181,24 @@ func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, err
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
-// AggregateAttestation fetches the aggregate attestation for the given options.
+// AggregateAttestation fetches the aggregate attestation given an attestation to v1 beacon node endpoint.
 func (s *Sleepy) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.AggregateAttestation(ctx, opts)
+}
+
+// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+func (s *Sleepy) AggregateAttestationV2(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
@@ -194,7 +210,7 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context,
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.AggregateAttestation(ctx, opts)
+	return next.AggregateAttestationV2(ctx, opts)
 }
 
 // SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.

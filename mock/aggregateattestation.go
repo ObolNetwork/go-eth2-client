@@ -21,15 +21,37 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// AggregateAttestation fetches the aggregate attestation for the given options.
+// AggregateAttestation fetches the aggregate attestation given an attestation to v1 beacon node endpoint.
 func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	if s.AggregateAttestationFunc != nil {
+		return s.AggregateAttestationFunc(ctx, opts)
+	}
+
+	return &api.Response[*phase0.Attestation]{
+		Data: &phase0.Attestation{
+			Data: &phase0.AttestationData{
+				Source: &phase0.Checkpoint{},
+				Target: &phase0.Checkpoint{},
+			},
+		},
+		Metadata: make(map[string]any),
+	}, nil
+}
+
+// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+func (s *Service) AggregateAttestationV2(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
-	if s.AggregateAttestationFunc != nil {
-		return s.AggregateAttestationFunc(ctx, opts)
+	if s.AggregateAttestationV2Func != nil {
+		return s.AggregateAttestationV2Func(ctx, opts)
 	}
 
 	return &api.Response[*spec.VersionedAttestation]{

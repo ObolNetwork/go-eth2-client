@@ -157,8 +157,15 @@ type EventHandlerFunc func(*apiv1.Event)
 
 // AggregateAttestationProvider is the interface for providing aggregate attestations.
 type AggregateAttestationProvider interface {
-	// AggregateAttestation fetches the aggregate attestation for the given options.
+	// AggregateAttestation fetches the aggregate attestation for the given options to v1 beacon node endpoint.
 	AggregateAttestation(ctx context.Context,
+		opts *api.AggregateAttestationOpts,
+	) (
+		*api.Response[*phase0.Attestation],
+		error,
+	)
+	// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+	AggregateAttestationV2(ctx context.Context,
 		opts *api.AggregateAttestationOpts,
 	) (
 		*api.Response[*spec.VersionedAttestation],

@@ -19,17 +19,45 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// AggregateAttestation fetches the aggregate attestation for the given options.
+// AggregateAttestation fetches the aggregate attestation given an attestation to v1 beacon node endpoint.
 func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		return aggregate, nil
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, isResponse := res.(*api.Response[*phase0.Attestation])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
+}
+
+// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+func (s *Service) AggregateAttestationV2(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, opts)
+		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestationV2(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

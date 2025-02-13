@@ -26,8 +26,64 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// AggregateAttestation fetches the aggregate attestation for the given options.
+// AggregateAttestation fetches the aggregate attestation for the given options to v1 beacon node endpoint.
 func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.AttestationDataRoot.IsZero() {
+		return nil, errors.Join(errors.New("no attestation data root specified"), client.ErrInvalidOptions)
+	}
+
+	endpoint := "/eth/v1/validator/aggregate_attestation"
+	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
+	if err != nil {
+		return nil, err
+	}
+
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), phase0.Attestation{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Confirm the attestation is for the requested slot.
+	if data.Data.Slot != opts.Slot {
+		return nil,
+			errors.Join(
+				fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot),
+				client.ErrInconsistentResult,
+			)
+	}
+
+	// Confirm the attestation data is correct.
+	dataRoot, err := data.Data.HashTreeRoot()
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to obtain hash tree root of aggregate attestation data"), err)
+	}
+	if !bytes.Equal(dataRoot[:], opts.AttestationDataRoot[:]) {
+		return nil, errors.Join(
+			fmt.Errorf("aggregate attestation has data root %#x; expected %#x", dataRoot[:], opts.AttestationDataRoot[:]),
+			client.ErrInconsistentResult,
+		)
+	}
+
+	return &api.Response[*phase0.Attestation]{
+		Metadata: metadata,
+		Data:     &data,
+	}, nil
+}
+
+// AggregateAttestationV2 fetches the aggregate attestation for the given options to v2 beacon node endpoint.
+func (s *Service) AggregateAttestationV2(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
@@ -51,7 +107,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, err
 	}
 
-	data, metadata, err := decodeAggregateAttestation(httpResponse)
+	data, metadata, err := decodeAggregateAttestationV2(httpResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +147,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	}, nil
 }
 
-func decodeAggregateAttestation(httpResponse *httpResponse) (*spec.VersionedAttestation, map[string]any, error) {
+func decodeAggregateAttestationV2(httpResponse *httpResponse) (*spec.VersionedAttestation, map[string]any, error) {
 	var metadata map[string]any
 	data := &spec.VersionedAttestation{
 		Version: httpResponse.consensusVersion,
