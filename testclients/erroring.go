@@ -264,8 +264,8 @@ func (s *Erroring) AttestationPool(ctx context.Context,
 	return next.AttestationPool(ctx, opts)
 }
 
-// SubmitAttestations submits attestations.
-func (s *Erroring) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
+// SubmitAttestations submits attestations to v1 beacon node endpoint.
+func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -275,6 +275,19 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations *api.Sub
 	}
 
 	return next.SubmitAttestations(ctx, attestations)
+}
+
+// SubmitAttestationsV2 submits attestations to v2 beacon node endpoint.
+func (s *Erroring) SubmitAttestationsV2(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitAttestationsV2(ctx, attestations)
 }
 
 // SubmitProposalPreparations submits proposal preparations.

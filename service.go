@@ -207,8 +207,10 @@ type AttestationRewardsProvider interface {
 
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
-	// SubmitAttestations submits attestations.
-	SubmitAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error
+	// SubmitAttestations submits attestations on v1 BN endpoint.
+	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
+	// SubmitAttestationsV2 submits attestations on v2 BN endpoint.
+	SubmitAttestationsV2(ctx context.Context, opts *api.SubmitAttestationsOpts) error
 }
 
 // AttesterSlashingSubmitter is the interface for submitting attester slashings.

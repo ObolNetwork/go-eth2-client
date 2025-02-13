@@ -23,10 +23,39 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitAttestations submits versioned attestations.
-func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error {
+// SubmitAttestations submits attestations to v1 beacon node endpoint.
+func (s *Service) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
+	specJSON, err := json.Marshal(attestations)
+	if err != nil {
+		return errors.Join(errors.New("failed to marshal JSON"), err)
+	}
+
+	endpoint := "/eth/v1/beacon/pool/attestations"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to submit beacon attestations"), err)
+	}
+
+	return nil
+}
+
+// SubmitAttestationsV2 submits versioned attestations to v2 beacon node endpoint.
+func (s *Service) SubmitAttestationsV2(ctx context.Context, opts *api.SubmitAttestationsOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
