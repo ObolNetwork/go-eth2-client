@@ -18,14 +18,31 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitAggregateAttestations submits aggregate attestations.
+// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
 func (s *Service) SubmitAggregateAttestations(ctx context.Context,
+	aggregateAndProofs []*phase0.SignedAggregateAndProof,
+) error {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, aggregateAndProofs)
+		if err != nil {
+			return nil, err
+		}
+
+		return true, nil
+	}, nil)
+
+	return err
+}
+
+// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint.
+func (s *Service) SubmitAggregateAttestationsV2(ctx context.Context,
 	opts *api.SubmitAggregateAttestationsOpts,
 ) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, opts)
+		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestationsV2(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

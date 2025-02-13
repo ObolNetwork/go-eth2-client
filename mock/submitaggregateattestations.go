@@ -17,9 +17,15 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitAggregateAttestations submits aggregate attestations.
-func (*Service) SubmitAggregateAttestations(_ context.Context, _ *api.SubmitAggregateAttestationsOpts) error {
+// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
+func (*Service) SubmitAggregateAttestations(_ context.Context, _ []*spec.SignedAggregateAndProof) error {
+	return nil
+}
+
+// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint.
+func (*Service) SubmitAggregateAttestationsV2(_ context.Context, _ *api.SubmitAggregateAttestationsOpts) error {
 	return nil
 }

@@ -197,15 +197,26 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context,
 	return next.AggregateAttestation(ctx, opts)
 }
 
-// SubmitAggregateAttestations submits aggregate attestations.
-func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
+// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
+func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
 
-	return next.SubmitAggregateAttestations(ctx, opts)
+	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
+}
+
+// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint.
+func (s *Sleepy) SubmitAggregateAttestationsV2(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitAggregateAttestationsV2(ctx, opts)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.

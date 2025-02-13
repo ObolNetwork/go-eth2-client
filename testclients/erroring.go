@@ -215,8 +215,8 @@ func (s *Erroring) AggregateAttestation(ctx context.Context,
 	return next.AggregateAttestation(ctx, opts)
 }
 
-// SubmitAggregateAttestations submits aggregate attestations.
-func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
+// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
+func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -225,7 +225,20 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, opts *api.Su
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitAggregateAttestations(ctx, opts)
+	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
+}
+
+// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint.
+func (s *Erroring) SubmitAggregateAttestationsV2(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitAggregateAttestationsV2(ctx, opts)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.

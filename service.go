@@ -168,8 +168,10 @@ type AggregateAttestationProvider interface {
 
 // AggregateAttestationsSubmitter is the interface for submitting aggregate attestations.
 type AggregateAttestationsSubmitter interface {
-	// SubmitAggregateAttestations submits aggregate attestations.
-	SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error
+	// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
+	SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error
+	// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint..
+	SubmitAggregateAttestationsV2(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error
 }
 
 // AttestationDataProvider is the interface for providing attestation data.

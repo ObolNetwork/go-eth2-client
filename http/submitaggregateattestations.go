@@ -23,10 +23,39 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitAggregateAttestations submits aggregate attestations.
-func (s *Service) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
+// SubmitAggregateAttestations submits aggregate attestations to v1 beacon node endpoint.
+func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
+	specJSON, err := json.Marshal(aggregateAndProofs)
+	if err != nil {
+		return errors.Join(errors.New("failed to marshal JSON"), err)
+	}
+
+	endpoint := "/eth/v1/validator/aggregate_and_proofs"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to submit aggregate and proofs"), err)
+	}
+
+	return nil
+}
+
+// SubmitAggregateAttestationsV2 submits aggregate attestations to v2 beacon node endpoint.
+func (s *Service) SubmitAggregateAttestationsV2(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
