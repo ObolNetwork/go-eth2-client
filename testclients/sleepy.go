@@ -25,6 +25,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -255,7 +256,7 @@ func (s *Sleepy) AttestationData(ctx context.Context,
 func (s *Sleepy) AttestationPool(ctx context.Context,
 	opts *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
 	s.sleep(ctx)
@@ -416,14 +417,14 @@ func (s *Sleepy) BeaconState(ctx context.Context,
 }
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusclient.EventHandlerFunc) error {
+func (s *Sleepy) Events(ctx context.Context, opts *api.EventsOpts) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.EventsProvider)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
 
-	return next.Events(ctx, topics, handler)
+	return next.Events(ctx, opts)
 }
 
 // Finality provides the finality given a state ID.
@@ -742,4 +743,20 @@ func (s *Sleepy) ValidatorLiveness(ctx context.Context,
 	}
 
 	return next.ValidatorLiveness(ctx, opts)
+}
+
+// PendingDeposits provides the pending deposits for a given state.
+func (s *Sleepy) PendingDeposits(ctx context.Context,
+	opts *api.PendingDepositsOpts,
+) (
+	*api.Response[[]*electra.PendingDeposit],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.PendingDepositProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PendingDeposits(ctx, opts)
 }

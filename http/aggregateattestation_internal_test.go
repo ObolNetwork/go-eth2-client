@@ -45,8 +45,8 @@ func TestAggregateAttestationV2Decode(t *testing.T) {
 
 	t.Run("ElectraAttestationAggregate", func(t *testing.T) {
 		response := httpResponse{
-			// consensusVersion: spec.DataVersionElectra,
-			body: []byte(responseJson),
+			consensusVersion: spec.DataVersionElectra,
+			body:             []byte(responseJson),
 		}
 		data, metadata, err := decodeAggregateAttestationV2(&response)
 		require.NoError(t, err)

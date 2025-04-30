@@ -1,4 +1,4 @@
-// Copyright © 2021, 2025 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,29 +18,29 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 )
 
-// AttestationPool obtains the attestation pool for a given slot.
-func (s *Service) AttestationPool(ctx context.Context,
-	opts *api.AttestationPoolOpts,
+// PendingDeposits provides the pending deposits for a given state.
+func (s *Service) PendingDeposits(ctx context.Context,
+	opts *api.PendingDepositsOpts,
 ) (
-	*api.Response[[]*spec.VersionedAttestation],
+	*api.Response[[]*electra.PendingDeposit],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		attestationPool, err := client.(consensusclient.AttestationPoolProvider).AttestationPool(ctx, opts)
+		block, err := client.(consensusclient.PendingDepositProvider).PendingDeposits(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return attestationPool, nil
+		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[[]*spec.VersionedAttestation])
+	response, isResponse := res.(*api.Response[[]*electra.PendingDeposit])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

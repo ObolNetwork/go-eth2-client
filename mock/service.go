@@ -17,11 +17,11 @@ import (
 	"context"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -62,7 +62,7 @@ type Service struct {
 	BeaconStateRootFunc           func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 	BlockRewardsFunc              func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
 	DepositContractFunc           func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
-	EventsFunc                    func(context.Context, []string, client.EventHandlerFunc) error
+	EventsFunc                    func(context.Context, *api.EventsOpts) error
 	FinalityFunc                  func(context.Context, *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
 	ForkChoiceFunc                func(context.Context, *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
 	ForkFunc                      func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)
@@ -71,6 +71,7 @@ type Service struct {
 	NodePeersFunc                 func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
 	NodeSyncingFunc               func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
 	NodeVersionFunc               func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
+	PendingDepositsFunc           func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
 	ProposalFunc                  func(context.Context, *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 	ProposerDutiesFunc            func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
 	SignedBeaconBlockFunc         func(context.Context, *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)

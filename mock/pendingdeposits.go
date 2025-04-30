@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,13 +17,22 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 )
 
-// Events feeds requested events with the given topics to the supplied handler.
-func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
-	if s.EventsFunc != nil {
-		return s.EventsFunc(ctx, opts)
+// PendingDeposits provides the pending deposits for a given state.
+func (s *Service) PendingDeposits(ctx context.Context,
+	opts *api.PendingDepositsOpts,
+) (
+	*api.Response[[]*electra.PendingDeposit],
+	error,
+) {
+	if s.PendingDepositsFunc != nil {
+		return s.PendingDepositsFunc(ctx, opts)
 	}
 
-	return nil
+	return &api.Response[[]*electra.PendingDeposit]{
+		Data:     []*electra.PendingDeposit{},
+		Metadata: make(map[string]any),
+	}, nil
 }
