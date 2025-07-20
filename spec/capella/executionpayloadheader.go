@@ -241,8 +241,8 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if data.ExtraData == "" {
 		return errors.New("extra data missing")
 	}
-	switch {
-	case data.ExtraData == "0x":
+	switch data.ExtraData {
+	case "0x":
 		e.ExtraData = make([]byte, 0)
 	default:
 		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
