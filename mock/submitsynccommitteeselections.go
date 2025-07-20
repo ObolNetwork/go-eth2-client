@@ -21,7 +21,11 @@ import (
 )
 
 // SubmitSyncCommitteeSelections submits sync committee selections.
-func (*Service) SubmitSyncCommitteeSelections(_ context.Context, selections []*apiv1.SyncCommitteeSelection) (*api.Response[[]*apiv1.SyncCommitteeSelection], error) {
+func (*Service) SubmitSyncCommitteeSelections(_ context.Context,
+	selections []*apiv1.SyncCommitteeSelection,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeSelection], error,
+) {
 	return &api.Response[[]*apiv1.SyncCommitteeSelection]{
 		Data:     selections,
 		Metadata: make(map[string]any),

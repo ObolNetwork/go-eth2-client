@@ -300,7 +300,8 @@ type SyncCommitteeRewardsProvider interface {
 	)
 }
 
-// SyncCommitteeSelectionsSubmitter is the interface for submitting sync committee subnet selections requests, used by DV middleware client.
+// SyncCommitteeSelectionsSubmitter is the interface for submitting sync committee subnet selections requests.
+// Used by DV middleware clients.
 type SyncCommitteeSelectionsSubmitter interface {
 	// SubmitSyncCommitteeSelections submits sync committee selections.
 	SubmitSyncCommitteeSelections(ctx context.Context,

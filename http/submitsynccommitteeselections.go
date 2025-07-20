@@ -50,7 +50,6 @@ func (s *Service) SubmitSyncCommitteeSelections(ctx context.Context,
 		ContentTypeJSON,
 		map[string]string{},
 	)
-
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request sync committee selections"), err)
 	}

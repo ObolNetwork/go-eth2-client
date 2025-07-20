@@ -22,9 +22,14 @@ import (
 )
 
 // SubmitSyncCommitteeSelections submits sync committee selections.
-func (s *Service) SubmitSyncCommitteeSelections(ctx context.Context, selections []*apiv1.SyncCommitteeSelection) (*api.Response[[]*apiv1.SyncCommitteeSelection], error) {
+func (s *Service) SubmitSyncCommitteeSelections(ctx context.Context,
+	selections []*apiv1.SyncCommitteeSelection,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeSelection], error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		aggregatedSelections, err := client.(consensusclient.SyncCommitteeSelectionsSubmitter).SubmitSyncCommitteeSelections(ctx, selections)
+		aggregatedSelections, err := client.(consensusclient.SyncCommitteeSelectionsSubmitter).
+			SubmitSyncCommitteeSelections(ctx, selections)
 		if err != nil {
 			return nil, err
 		}
