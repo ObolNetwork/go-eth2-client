@@ -86,6 +86,9 @@ func (b *SyncCommitteeSelection) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for subcommittee index")
 	}
 	b.SubcommitteeIndex = subcommitteeIndex
+	if syncCommitteeSelectionJSON.SelectionProof == "" {
+		return errors.New("selection proof missing")
+	}
 	selectionProof, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeSelectionJSON.SelectionProof, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for selection proof")
