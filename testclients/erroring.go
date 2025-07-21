@@ -319,9 +319,9 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 	return next.SubmitSyncCommitteeMessages(ctx, messages)
 }
 
-// SubmitSyncCommitteeSelections submits sync committee selections.
-func (s *Erroring) SubmitSyncCommitteeSelections(ctx context.Context,
-	selections []*apiv1.SyncCommitteeSelection,
+// SyncCommitteeSelections submits sync committee selections.
+func (s *Erroring) SyncCommitteeSelections(ctx context.Context,
+	opts *api.SyncCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.SyncCommitteeSelection],
 	error,
@@ -329,12 +329,12 @@ func (s *Erroring) SubmitSyncCommitteeSelections(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
-	next, isNext := s.next.(consensusclient.SyncCommitteeSelectionsSubmitter)
+	next, isNext := s.next.(consensusclient.SyncCommitteeSelectionsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitSyncCommitteeSelections(ctx, selections)
+	return next.SyncCommitteeSelections(ctx, opts)
 }
 
 // AttesterDuties obtains attester duties.

@@ -691,18 +691,18 @@ func (s *Sleepy) SyncCommitteeRewards(ctx context.Context,
 	return next.SyncCommitteeRewards(ctx, opts)
 }
 
-// SubmitSyncCommitteeSelections submits sync committee selections.
-func (s *Sleepy) SubmitSyncCommitteeSelections(ctx context.Context, selections []*apiv1.SyncCommitteeSelection) (
+// SyncCommitteeSelections submits sync committee selections.
+func (s *Sleepy) SyncCommitteeSelections(ctx context.Context, opts *api.SyncCommitteeSelectionsOpts) (
 	*api.Response[[]*apiv1.SyncCommitteeSelection],
 	error,
 ) {
 	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.SyncCommitteeSelectionsSubmitter)
+	next, isNext := s.next.(consensusclient.SyncCommitteeSelectionsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.SubmitSyncCommitteeSelections(ctx, selections)
+	return next.SyncCommitteeSelections(ctx, opts)
 }
 
 // ValidatorLiveness provides the liveness data to the given validators.

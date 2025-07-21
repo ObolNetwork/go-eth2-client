@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
@@ -26,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitSyncCommitteeSelections(t *testing.T) {
+func TestSyncCommitteeSelections(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -51,7 +52,7 @@ func TestSubmitSyncCommitteeSelections(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.SyncCommitteeSelectionsSubmitter).SubmitSyncCommitteeSelections(ctx, []*apiv1.SyncCommitteeSelection{})
+		res, err := multiClient.(consensusclient.SyncCommitteeSelectionsProvider).SyncCommitteeSelections(ctx, &api.SyncCommitteeSelectionsOpts{Selections: []*apiv1.SyncCommitteeSelection{}})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

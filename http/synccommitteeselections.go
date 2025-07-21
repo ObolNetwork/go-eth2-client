@@ -23,9 +23,9 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// SubmitSyncCommitteeSelections submits sync committee selections.
-func (s *Service) SubmitSyncCommitteeSelections(ctx context.Context,
-	selections []*apiv1.SyncCommitteeSelection,
+// SyncCommitteeSelections submits sync committee selections.
+func (s *Service) SyncCommitteeSelections(ctx context.Context,
+	opts *api.SyncCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.SyncCommitteeSelection],
 	error,
@@ -34,7 +34,7 @@ func (s *Service) SubmitSyncCommitteeSelections(ctx context.Context,
 		return nil, err
 	}
 
-	specJSON, err := json.Marshal(selections)
+	specJSON, err := json.Marshal(opts.Selections)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to encode sync committee selections"), err)
 	}

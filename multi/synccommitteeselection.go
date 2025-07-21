@@ -11,23 +11,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package multi
 
 import (
 	"context"
 
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// SubmitSyncCommitteeSelections submits sync committee selections.
-func (*Service) SubmitSyncCommitteeSelections(_ context.Context,
-	selections []*apiv1.SyncCommitteeSelection,
+// SyncCommitteeSelections submits sync committee selections.
+func (s *Service) SyncCommitteeSelections(ctx context.Context,
+	opts *api.SyncCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.SyncCommitteeSelection], error,
 ) {
-	return &api.Response[[]*apiv1.SyncCommitteeSelection]{
-		Data:     selections,
-		Metadata: make(map[string]any),
-	}, nil
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		aggregatedSelections, err := client.(consensusclient.SyncCommitteeSelectionsProvider).
+			SyncCommitteeSelections(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		return aggregatedSelections, nil
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, isResponse := res.(*api.Response[[]*apiv1.SyncCommitteeSelection])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }
