@@ -55,6 +55,7 @@ type Service struct {
 	AttesterDutiesFunc                 func(context.Context, *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error)
 	AttestationDataFunc                func(context.Context, *api.AttestationDataOpts) (*api.Response[*phase0.AttestationData], error)
 	AttestationRewardsFunc             func(context.Context, *api.AttestationRewardsOpts) (*api.Response[*apiv1.AttestationRewards], error)
+	BeaconBlockAttestationsFunc        func(context.Context, *api.BeaconBlockAttestationsOpts) (*api.Response[[]*spec.VersionedAttestation], error)
 	BeaconBlockHeaderFunc              func(context.Context, *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error)
 	BeaconBlockRootFunc                func(context.Context, *api.BeaconBlockRootOpts) (*api.Response[*phase0.Root], error)
 	BeaconStateFunc                    func(context.Context, *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error)
