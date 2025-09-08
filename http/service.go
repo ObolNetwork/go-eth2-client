@@ -15,8 +15,10 @@ package http
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
@@ -112,6 +114,11 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		}
 	}
 
+	extraHeaders, err := parseBasicAuth(parameters.address, parameters.extraHeaders)
+	if err != nil {
+		return nil, err
+	}
+
 	base, address, err := parseAddress(parameters.address)
 	if err != nil {
 		return nil, err
@@ -125,7 +132,7 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		timeout:             parameters.timeout,
 		userIndexChunkSize:  parameters.indexChunkSize,
 		userPubKeyChunkSize: parameters.pubKeyChunkSize,
-		extraHeaders:        parameters.extraHeaders,
+		extraHeaders:        extraHeaders,
 		enforceJSON:         parameters.enforceJSON,
 		pingSem:             semaphore.NewWeighted(1),
 		hooks:               parameters.hooks,
@@ -424,4 +431,24 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	}
 
 	return base, &baseAddress, nil
+}
+
+// parseBasicAuth translates Basic access authentication parameters in address into Authorization header
+// and returns a copy of headers with the added Authorization header
+func parseBasicAuth(address string, headers map[string]string) (map[string]string, error) {
+	url, err := url.Parse(address)
+	if err != nil {
+		return nil, errors.New("failed to parse address")
+	}
+	if url.User == nil {
+		return headers, nil
+	}
+
+	headersWithAuth := make(map[string]string, len(headers)+1)
+	maps.Copy(headersWithAuth, headers)
+
+	password, _ := url.User.Password()
+	headersWithAuth["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(url.User.Username()+":"+password))
+
+	return headersWithAuth, nil
 }
