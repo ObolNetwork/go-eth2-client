@@ -433,8 +433,8 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	return base, &baseAddress, nil
 }
 
-// parseBasicAuth translates Basic access authentication parameters in address into Authorization header
-// and returns a copy of headers with the added Authorization header
+// parseBasicAuth adds an HTTP Basic Authorization header to a copy of the provided headers map if the address contains credentials.
+// If no credentials are present, it returns the original headers.
 func parseBasicAuth(address string, headers map[string]string) (map[string]string, error) {
 	url, err := url.Parse(address)
 	if err != nil {
