@@ -436,19 +436,19 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 // parseBasicAuth adds an HTTP Basic Authorization header to a copy of the provided headers map if the address contains credentials.
 // If no credentials are present, it returns the original headers.
 func parseBasicAuth(address string, headers map[string]string) (map[string]string, error) {
-	url, err := url.Parse(address)
+	parsedURL, err := url.Parse(address)
 	if err != nil {
 		return nil, errors.New("failed to parse address")
 	}
-	if url.User == nil {
+	if parsedURL.User == nil {
 		return headers, nil
 	}
 
 	headersWithAuth := make(map[string]string, len(headers)+1)
 	maps.Copy(headersWithAuth, headers)
 
-	password, _ := url.User.Password()
-	headersWithAuth["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(url.User.Username()+":"+password))
+	password, _ := parsedURL.User.Password()
+	headersWithAuth["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(parsedURL.User.Username()+":"+password))
 
 	return headersWithAuth, nil
 }
