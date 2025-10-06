@@ -118,6 +118,21 @@ func TestParseBasicAuth(t *testing.T) {
 			address:    "http://user:pass@foo.com",
 			expHeaders: map[string]string{"Authorization": "Basic dXNlcjpwYXNz"},
 		},
+		{
+			name:       "Missing user",
+			address:    "http://:pass@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic OnBhc3M="},
+		},
+		{
+			name:       "Missing pass",
+			address:    "http://user:@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic dXNlcjo="},
+		},
+		{
+			name:       "Missing user and pass",
+			address:    "http://:@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic Og=="},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
