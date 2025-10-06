@@ -105,6 +105,16 @@ func TestParseBasicAuth(t *testing.T) {
 		err        string
 	}{
 		{
+			name: "No Scheme",
+			address: "127.0.0.1:5051",
+			expHeaders: nil,
+		},
+		{
+			name: "With Scheme",
+			address: "http://127.0.0.1:5051",
+			expHeaders: nil,
+		},
+		{
 			name:       "Simple",
 			address:    "http://user:pass@foo.com",
 			expHeaders: map[string]string{"Authorization": "Basic dXNlcjpwYXNz"},
