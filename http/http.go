@@ -20,8 +20,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -454,3 +456,149 @@ func urlForCall(base *url.URL,
 func statusCodeFamily(status int) int {
 	return status / 100
 }
+
+// Proxy performs an HTTP proxy request and returns the response.
+func (s *Service) Proxy(ctx context.Context, req *http.Request) (*http.Response, error) {
+	return s.proxy(ctx, req)
+}
+
+// proxy performs an HTTP proxy request using a reverse proxy and returns the response.
+func (s *Service) proxy(ctx context.Context, req *http.Request) (*http.Response, error) {
+	_, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "proxy")
+	defer span.End()
+
+	// #nosec G404
+	logger := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("path", req.URL.Path).Logger()
+	logger.Trace().Str("method", req.Method).Msg("Proxy request")
+
+	span.SetAttributes(
+		attribute.String("url", s.base.String()),
+		attribute.String("path", req.URL.Path),
+		attribute.String("method", req.Method),
+	)
+
+	rp := httputil.NewSingleHostReverseProxy(s.base)
+	rp.ErrorLog = log.New(io.Discard, "", 0)
+
+	// Apply custom director for auth and headers
+	defaultDirector := rp.Director
+	rp.Director = func(outReq *http.Request) {
+		defaultDirector(outReq)
+
+		// Basic auth if present in target URL
+		if s.base.User != nil {
+			password, _ := s.base.User.Password()
+			outReq.SetBasicAuth(s.base.User.Username(), password)
+		}
+
+		// Apply extra headers (override or add)
+		for k, v := range s.extraHeaders {
+			outReq.Header.Set(k, v)
+		}
+	}
+
+	// Capture writer buffers headers/status/body.
+	captureWriter := newResponseCapture()
+
+	// Ensure reverse proxy errors don't panic the process when used outside the server pipeline.
+	var proxyErr error
+	rp.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, err error) {
+		proxyErr = err
+		if !captureWriter.wroteHeader {
+			w.WriteHeader(http.StatusBadGateway)
+		}
+	}
+
+	var abortedByHandler, abortedUnexpected bool
+	func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				if rec == http.ErrAbortHandler {
+					abortedByHandler = true
+					logger.Warn().Err(http.ErrAbortHandler).Msg("Reverse proxy panicked with ErrAbortHandler")
+				} else {
+					abortedUnexpected = true
+					logger.Warn().Interface("panic", rec).Msg("Reverse proxy panicked with unexpected error")
+				}
+			}
+		}()
+		rp.ServeHTTP(captureWriter, req)
+	}()
+
+	if abortedByHandler {
+		span.SetStatus(codes.Error, "Reverse proxy aborted")
+		return nil, errors.Join(
+			http.ErrAbortHandler,
+			fmt.Errorf("reverse proxy panicked (status: %d, url: %s)", captureWriter.status, s.base.String()),
+		)
+	}
+
+	if abortedUnexpected {
+		span.SetStatus(codes.Error, "Reverse proxy panicked")
+		return nil, fmt.Errorf("reverse proxy panicked with unexpected error (status: %d, url: %s)", captureWriter.status, s.base.String())
+	}
+
+	if proxyErr != nil {
+		logger.Warn().Err(proxyErr).Int("status_code", captureWriter.status).Msg("Proxy error")
+		span.SetStatus(codes.Error, proxyErr.Error())
+		return nil, errors.Join(
+			errors.New("proxy error"),
+			fmt.Errorf("status: %d, url: %s", captureWriter.status, s.base.String()),
+			proxyErr,
+		)
+	}
+
+	// Synthesize an *http.Response from the captured result
+	bodyBytes := captureWriter.body.Bytes()
+	res := &http.Response{
+		StatusCode:    captureWriter.status,
+		Status:        http.StatusText(captureWriter.status),
+		Header:        captureWriter.header.Clone(),
+		Body:          io.NopCloser(bytes.NewReader(bodyBytes)),
+		ContentLength: int64(len(bodyBytes)),
+		Request:       req,
+	}
+
+	span.SetAttributes(
+		attribute.Int("status_code", res.StatusCode),
+		attribute.Int("response_size", len(bodyBytes)),
+	)
+
+	logger.Trace().Int("status_code", res.StatusCode).Int("body_size", len(bodyBytes)).Msg("Proxy response")
+
+	return res, nil
+}
+
+// responseCapture is a buffered ResponseWriter that records headers, status and body.
+type responseCapture struct {
+	header      http.Header
+	body        bytes.Buffer
+	status      int
+	wroteHeader bool
+}
+
+func newResponseCapture() *responseCapture {
+	return &responseCapture{header: make(http.Header), status: http.StatusOK}
+}
+
+func (c *responseCapture) Header() http.Header { return c.header }
+
+func (c *responseCapture) WriteHeader(code int) {
+	if c.wroteHeader {
+		return
+	}
+	c.wroteHeader = true
+	c.status = code
+}
+
+func (c *responseCapture) Write(p []byte) (int, error) {
+	if !c.wroteHeader {
+		c.WriteHeader(http.StatusOK)
+	}
+
+	return c.body.Write(p)
+}
+
+// Flush implements http.Flusher for compatibility with ReverseProxy flush calls.
+// No need for actual Flush implementation since we buffer the entire response to memory.
+func (*responseCapture) Flush() {}
