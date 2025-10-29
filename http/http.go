@@ -459,37 +459,3 @@ func urlForCall(base *url.URL,
 func statusCodeFamily(status int) int {
 	return status / 100
 }
-
-// responseCapture is a buffered ResponseWriter that records headers, status and body.
-type responseCapture struct {
-	header      http.Header
-	body        bytes.Buffer
-	status      int
-	wroteHeader bool
-}
-
-func newResponseCapture() *responseCapture {
-	return &responseCapture{header: make(http.Header), status: http.StatusOK}
-}
-
-func (c *responseCapture) Header() http.Header { return c.header }
-
-func (c *responseCapture) WriteHeader(code int) {
-	if c.wroteHeader {
-		return
-	}
-	c.wroteHeader = true
-	c.status = code
-}
-
-func (c *responseCapture) Write(p []byte) (int, error) {
-	if !c.wroteHeader {
-		c.WriteHeader(http.StatusOK)
-	}
-
-	return c.body.Write(p)
-}
-
-// Flush implements http.Flusher for compatibility with ReverseProxy flush calls.
-// No need for actual Flush implementation since we buffer the entire response to memory.
-func (*responseCapture) Flush() {}
