@@ -15,6 +15,7 @@ package client
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -843,4 +844,10 @@ type PayloadAttestationMessagesSubmitter interface {
 // ProposerPreferencesSubmitter is the interface for submitting proposer preferences.
 type ProposerPreferencesSubmitter interface {
 	SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error
+}
+
+// ProxyProvider provides a proxy for HTTP requests.
+type ProxyProvider interface {
+	// Proxy performs an HTTP proxy request and returns the response.
+	Proxy(ctx context.Context, req *http.Request) (*http.Response, error)
 }
