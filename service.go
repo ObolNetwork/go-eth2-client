@@ -15,6 +15,7 @@ package client
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -810,4 +811,10 @@ type PayloadAttestationPoolProvider interface {
 // PayloadAttestationMessagesSubmitter is the interface for submitting payload attestation messages.
 type PayloadAttestationMessagesSubmitter interface {
 	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
+}
+
+// ProxyProvider provides a proxy for HTTP requests.
+type ProxyProvider interface {
+	// Proxy performs an HTTP proxy request and returns the response.
+	Proxy(ctx context.Context, req *http.Request) (*http.Response, error)
 }
