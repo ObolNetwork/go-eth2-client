@@ -118,6 +118,7 @@ func (s *Service) post(ctx context.Context,
 
 	res := &httpResponse{
 		statusCode: resp.StatusCode,
+		raw:        *resp,
 	}
 	populateHeaders(res, resp)
 
@@ -137,6 +138,7 @@ func (s *Service) post(ctx context.Context,
 
 		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
+	res.raw.Body = io.NopCloser(bytes.NewReader(res.body))
 
 	if resp.StatusCode == http.StatusNoContent {
 		// Nothing returned.  This is not considered an error.
@@ -218,6 +220,7 @@ type httpResponse struct {
 	headers          map[string]string
 	consensusVersion spec.DataVersion
 	body             []byte
+	raw              http.Response
 }
 
 // get sends an HTTP get request and returns the response.
@@ -291,6 +294,7 @@ func (s *Service) get(ctx context.Context,
 
 	res := &httpResponse{
 		statusCode: resp.StatusCode,
+		raw:        *resp,
 	}
 	populateHeaders(res, resp)
 
@@ -314,6 +318,7 @@ func (s *Service) get(ctx context.Context,
 
 		return nil, errors.Join(errors.New("failed to read GET response"), err)
 	}
+	res.raw.Body = io.NopCloser(bytes.NewReader(res.body))
 
 	if resp.StatusCode == http.StatusNoContent {
 		// Nothing returned.  This is not considered an error.
