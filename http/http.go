@@ -139,6 +139,7 @@ func (s *Service) postWithResponseLimit(ctx context.Context,
 
 	res := &httpResponse{
 		statusCode: resp.StatusCode,
+		raw:        *resp,
 	}
 	populateHeaders(res, resp)
 
@@ -158,6 +159,7 @@ func (s *Service) postWithResponseLimit(ctx context.Context,
 
 		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
+	res.raw.Body = io.NopCloser(bytes.NewReader(res.body))
 
 	if resp.StatusCode == http.StatusNoContent {
 		// Nothing returned.  This is not considered an error.
@@ -241,6 +243,7 @@ type httpResponse struct {
 	headers          map[string]string
 	consensusVersion spec.DataVersion
 	body             []byte
+	raw              http.Response
 }
 
 func readResponseBody(body io.Reader, limit int) ([]byte, error) {
@@ -345,6 +348,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 
 	res := &httpResponse{
 		statusCode: resp.StatusCode,
+		raw:        *resp,
 	}
 	populateHeaders(res, resp)
 
@@ -368,6 +372,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 
 		return nil, errors.Join(errors.New("failed to read GET response"), err)
 	}
+	res.raw.Body = io.NopCloser(bytes.NewReader(res.body))
 
 	if resp.StatusCode == http.StatusNoContent {
 		// Nothing returned.  This is not considered an error.
