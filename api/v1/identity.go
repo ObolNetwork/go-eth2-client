@@ -22,19 +22,19 @@ import (
 
 // NodeIdentity contains the node identity information.
 type NodeIdentity struct {
-	PeerID              string            `json:"peer_id"`
-	Enr                 string            `json:"enr"`
-	P2PAddresses        []string          `json:"p2p_addresses"`
-	DiscoveryAddresses  []string          `json:"discovery_addresses"`
-	Metadata            map[string]string `json:"metadata"`
+	PeerID             string            `json:"peer_id"`
+	Enr                string            `json:"enr"`
+	P2PAddresses       []string          `json:"p2p_addresses"`
+	DiscoveryAddresses []string          `json:"discovery_addresses"`
+	Metadata           map[string]string `json:"metadata"`
 }
 
 type nodeIdentityJSON struct {
-	PeerID              string            `json:"peer_id"`
-	Enr                 string            `json:"enr"`
-	P2PAddresses        []string          `json:"p2p_addresses"`
-	DiscoveryAddresses  []string          `json:"discovery_addresses"`
-	Metadata            map[string]string `json:"metadata"`
+	PeerID             string            `json:"peer_id"`
+	Enr                string            `json:"enr"`
+	P2PAddresses       []string          `json:"p2p_addresses"`
+	DiscoveryAddresses []string          `json:"discovery_addresses"`
+	Metadata           map[string]string `json:"metadata"`
 }
 
 // MarshalJSON implements json.Marshaler.
