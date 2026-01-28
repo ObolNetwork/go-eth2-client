@@ -526,6 +526,7 @@ type GenesisProvider interface {
 		error,
 	)
 }
+
 // NodeIdentityProvider is the interface for providing node identity information.
 type NodeIdentityProvider interface {
 	// NodeIdentity provides the identity information of the node.
@@ -536,6 +537,7 @@ type NodeIdentityProvider interface {
 		error,
 	)
 }
+
 // NodePeersProvider is the interface for providing peer information.
 type NodePeersProvider interface {
 	// NodePeers provides the peers of the node.
