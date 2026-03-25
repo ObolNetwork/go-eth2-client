@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout target repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: master
 
@@ -24,7 +24,7 @@ jobs:
 
       - name: Sync upstream changes
         id: sync
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        uses: aormsby/Fork-Sync-With-Upstream-action@1090e365224fc834e7e1de521c417ded2d6fcb53 # v3.4.1
         with:
           target_sync_branch: master
           target_repo_token: ${{ secrets.OBOL_PLATFORM_PAT }}
@@ -38,7 +38,7 @@ jobs:
     if: needs.sync_latest_from_upstream.outputs.has_new_commits == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
           ref: obol
@@ -83,7 +83,7 @@ jobs:
 
       - name: Rebase failed error
         if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
-        uses: rtCamp/action-slack-notify@v2
+        uses: rtCamp/action-slack-notify@e31e87e03dd19038e411e38ae27cbad084a90661 # v2
         env:
           SLACK_CHANNEL: dev-stack-releases
           SLACK_COLOR: eb3d2c #red
@@ -94,7 +94,7 @@ jobs:
 
       - name: Rebase failed conflict
         if: contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
-        uses: rtCamp/action-slack-notify@v2
+        uses: rtCamp/action-slack-notify@e31e87e03dd19038e411e38ae27cbad084a90661 # v2
         env:
           SLACK_CHANNEL: dev-stack-releases
           SLACK_COLOR: ecc926 #yellow
