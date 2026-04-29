@@ -132,7 +132,7 @@ jobs:
         run: |
           tag="${{ needs.fetch_latest_tag.outputs.latest_tag }}-obol"
           echo "Tagging new obolnetwork/go-eth2-client $tag"
-          git tag $tag
+          git -c tag.gpgsign=false tag $tag
           echo "Pushing new obolnetwork/go-eth2-client $tag tag"
           git push --tags
           echo "$tag tagged 🚀!"
