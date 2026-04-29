@@ -593,6 +593,18 @@ type NodeVersionProvider interface {
 	)
 }
 
+// NodeVersionV2Provider is the interface for providing the structured node version.
+type NodeVersionV2Provider interface {
+	// NodeVersionV2 returns structured version information for the beacon node and, when available,
+	// its attached execution client.
+	NodeVersionV2(ctx context.Context,
+		opts *api.NodeVersionV2Opts,
+	) (
+		*api.Response[*apiv1.NodeVersionV2],
+		error,
+	)
+}
+
 // ProposalPreparationsSubmitter is the interface for submitting proposal preparations.
 type ProposalPreparationsSubmitter interface {
 	// SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
