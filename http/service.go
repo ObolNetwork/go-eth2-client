@@ -58,6 +58,8 @@ type Service struct {
 	forkScheduleMutex    sync.RWMutex
 	nodeVersion          string
 	nodeVersionMutex     sync.RWMutex
+	nodeVersionV2        *apiv1.NodeVersionV2
+	nodeVersionV2Mutex   sync.RWMutex
 
 	// User-specified chunk sizes.
 	userIndexChunkSize  int
@@ -352,6 +354,9 @@ func (s *Service) clearStaticValues() {
 	s.nodeVersionMutex.Lock()
 	s.nodeVersion = ""
 	s.nodeVersionMutex.Unlock()
+	s.nodeVersionV2Mutex.Lock()
+	s.nodeVersionV2 = nil
+	s.nodeVersionV2Mutex.Unlock()
 }
 
 // checkDVT checks if connected to DVT middleware and sets
