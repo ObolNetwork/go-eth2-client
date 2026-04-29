@@ -73,6 +73,7 @@ type Service struct {
 	NodePeerCountFunc             func(context.Context, *api.NodePeerCountOpts) (*api.Response[*apiv1.PeerCount], error)
 	NodeSyncingFunc               func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
 	NodeVersionFunc               func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
+	NodeVersionV2Func             func(context.Context, *api.NodeVersionV2Opts) (*api.Response[*apiv1.NodeVersionV2], error)
 	PendingDepositsFunc           func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
 	PendingConsolidationsFunc     func(context.Context, *api.PendingConsolidationsOpts) (*api.Response[[]*electra.PendingConsolidation], error)
 	PendingPartialWithdrawalsFunc func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)
