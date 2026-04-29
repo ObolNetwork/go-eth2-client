@@ -152,6 +152,24 @@ func (s *Sleepy) NodeVersion(ctx context.Context,
 	return next.NodeVersion(ctx, opts)
 }
 
+// NodeVersionV2 returns structured version information for the beacon node and, when available,
+// its attached execution client.
+func (s *Sleepy) NodeVersionV2(ctx context.Context,
+	opts *api.NodeVersionV2Opts,
+) (
+	*api.Response[*apiv1.NodeVersionV2],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.NodeVersionV2Provider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.NodeVersionV2(ctx, opts)
+}
+
 // SlotDuration provides the duration of a slot of the chain.
 //
 // Deprecated: use Spec().
