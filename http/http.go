@@ -82,6 +82,7 @@ func (s *Service) post(ctx context.Context,
 	opCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	// #nosec G704 -- URL targets the user-configured beacon node endpoint; not an SSRF surface.
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, callURL.String(), body)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to create POST request"), err)
@@ -100,6 +101,7 @@ func (s *Service) post(ctx context.Context,
 		req.Header.Set("User-Agent", defaultUserAgent)
 	}
 
+	// #nosec G704 -- URL targets the user-configured beacon node endpoint; not an SSRF surface.
 	resp, err := s.client.Do(req)
 	if err != nil {
 		switch {
@@ -289,6 +291,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 	opCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	// #nosec G704 -- URL targets the user-configured beacon node endpoint; not an SSRF surface.
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, callURL.String(), nil)
 	if err != nil {
 		span.SetStatus(codes.Error, "Failed to create request")
@@ -306,6 +309,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 		req.Header.Set("Accept", "application/octet-stream;q=1,application/json;q=0.9")
 	}
 
+	// #nosec G704 -- URL targets the user-configured beacon node endpoint; not an SSRF surface.
 	resp, err := s.client.Do(req)
 	if err != nil {
 		switch {
