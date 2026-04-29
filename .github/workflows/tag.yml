@@ -4,6 +4,7 @@ on:
   schedule:
     # scheduled at 09:00 every day
     - cron: "0 9 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -38,7 +39,6 @@ jobs:
           git config --global tag.gpgsign true
 
       - name: Fetch tags from upstream
-        id: fetch
         env:
           GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
@@ -49,42 +49,29 @@ jobs:
           git fetch --tags
           echo "Origin tags fetched successfully"
           echo "Fetching tags locally from upstream"
-          {
-            echo "FETCH_RESULT<<EOF"
-            echo "$(git fetch --tags upstream 2>&1)"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          git fetch --tags upstream
           echo "Upstream tags fetched successfully"
 
       - name: Evaluate result
         id: get_latest_tag
         run: |
-          echo "${{ steps.fetch.outputs.FETCH_RESULT }}"
-          if [ -z "${{ steps.fetch.outputs.FETCH_RESULT }}" ]; then
-            echo "No new tag found in upstream 🫧"
-            echo "HAS_NEW_TAG='false'" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Work only with new tags, not branches
-          echo "Filter only new tags"
-          NEW_TAGS=$(echo "${{ steps.fetch.outputs.FETCH_RESULT }}" | grep "\[new tag\]") || grep_exit_code=$?; if [[ $grep_exit_code -ne 1 ]]; then (exit $grep_exit_code); fi
-          if [ -z "$NEW_TAGS" ]; then
-            echo "No new tag found in upstream 🫧"
-            echo "HAS_NEW_TAG='false'" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "New tags found!"
-          echo "$NEW_TAGS"
-          # Get latest tag, as there may be multiple new tags
-          echo "Get latest tag"
-          LATEST_TAG=$(echo "$NEW_TAGS" | grep -Eo 'v[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' | tail -1)
+          # Find the latest semver tag of the form vX.Y.Z (no suffix).
+          LATEST_TAG=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
           if [ -z "$LATEST_TAG" ]; then
-            echo "No new tag found in upstream 🫧"
+            echo "No semver tag found 🫧"
+            echo "HAS_NEW_TAG=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Latest semver tag is $LATEST_TAG"
+          OBOL_TAG="${LATEST_TAG}-obol"
+          # Trigger tag_obol if the matching -obol tag does not yet exist,
+          # so failed previous runs can be retried on subsequent schedules.
+          if git rev-parse --verify --quiet "refs/tags/${OBOL_TAG}" > /dev/null; then
+            echo "${OBOL_TAG} already exists, nothing to do 🫧"
             echo "HAS_NEW_TAG=false" >> "$GITHUB_OUTPUT"
           else
-            echo "New latest tag found in upstream 📝"
-            echo "$LATEST_TAG"
-            echo "LATEST_TAG="${LATEST_TAG}"" >> "$GITHUB_OUTPUT"
+            echo "${OBOL_TAG} does not exist, will create 📝"
+            echo "LATEST_TAG=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
             echo "HAS_NEW_TAG=true" >> "$GITHUB_OUTPUT"
           fi
 
