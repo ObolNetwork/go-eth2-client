@@ -115,18 +115,62 @@ jobs:
         id: rebase
         env:
           GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
+          LATEST_TAG: ${{ needs.fetch_latest_tag.outputs.latest_tag }}
         run: |
-          echo "Rebasing branch obol on tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}"
+          echo "Rebasing branch obol on tag ${LATEST_TAG}"
           git fetch
+
+          tag_commit="$(git rev-parse "${LATEST_TAG}^{commit}")"
+          master_commit="$(git rev-parse origin/master)"
+
+          # Detect success via git's exit code.
+          set +e
+          rebase_output="$(git rebase --onto "${tag_commit}" "${master_commit}" obol 2>&1)"
+          rebase_status=$?
+          set -e
+          echo "${rebase_output}"
+
           {
             echo "RESULT<<EOF"
-            echo "$(git rebase --onto $(echo $(git log -n 1 --pretty=format:"%H" ${{ needs.fetch_latest_tag.outputs.latest_tag }} )) $(echo $(git log -n 1 --pretty=format:"%H" origin/master)) obol 2>&1)"
+            echo "${rebase_output}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-          echo "Rebase completed"
+
+          if [ "${rebase_status}" -eq 0 ]; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            # Leave a clean tree/branch behind for the next scheduled retry.
+            git rebase --abort || true
+          fi
+          echo "Rebase completed with status ${rebase_status}"
+
+      - name: Verify tag equals upstream tag + obol changes
+        if: steps.rebase.outputs.success == 'true'
+        id: verify
+        env:
+          LATEST_TAG: ${{ needs.fetch_latest_tag.outputs.latest_tag }}
+        run: |
+          tag_commit="$(git rev-parse "${LATEST_TAG}^{commit}")"
+          # After the rebase, local `obol` points at the rebased commits (HEAD),
+          # while the remote-tracking `origin/obol` still points at the original
+          # (master + obol) branch. The obol customizations applied on top of the
+          # upstream tag must be patch-identical to those applied on top of master.
+          echo "Comparing obol patches on master vs on ${LATEST_TAG}"
+          git range-diff --no-color origin/master..origin/obol "${tag_commit}..HEAD" | tee range-diff.txt
+          # In range-diff mapping lines, field 3 is the operator: '=' identical,
+          # '!' changed, '<'/'>' present in only one range. Anything but '=' = drift.
+          drift="$(awk '$1 ~ /^([0-9]+|-):$/ && $3 ~ /^[=!<>]$/ && $3 != "=" {c++} END {print c+0}' range-diff.txt)"
+          if [ "${drift}" -ne 0 ]; then
+            echo "Verification failed: ${drift} obol commit(s) diverged when applied onto ${LATEST_TAG}"
+            echo "verified=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Verified: ${LATEST_TAG}-obol is upstream ${LATEST_TAG} + obol changes ✅"
+            echo "verified=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Tag obolnetwork/go-eth2-client
-        if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated') || contains(steps.rebase.outputs.RESULT, 'is up to date.')
+        if: steps.verify.outputs.verified == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
@@ -134,8 +178,19 @@ jobs:
           echo "Tagging new obolnetwork/go-eth2-client $tag"
           git -c tag.gpgsign=false tag $tag
           echo "Pushing new obolnetwork/go-eth2-client $tag tag"
-          git push --tags
+          git push origin "refs/tags/${tag}"
           echo "$tag tagged 🚀!"
+
+      - name: Verification failed
+        if: steps.verify.outputs.verified == 'false'
+        uses: rtCamp/action-slack-notify@e31e87e03dd19038e411e38ae27cbad084a90661 # v2
+        env:
+          SLACK_CHANNEL: dev-stack-releases
+          SLACK_COLOR: eb3d2c #red
+          SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
+          SLACK_MESSAGE: "Refused to tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}-obol: obol changes did not apply identically onto upstream tag ${{ needs.fetch_latest_tag.outputs.latest_tag }} (see range-diff in job logs)"
+          SLACK_TITLE: "go-eth2-client tag verification failed"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
 
       - name: Rebase failed error
         if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')

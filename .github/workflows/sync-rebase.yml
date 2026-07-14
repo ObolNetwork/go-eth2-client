@@ -65,15 +65,31 @@ jobs:
         run: |
           echo "Rebasing branch obol on branch master"
           git fetch
+
+          # Detect success via git's exit code, not by grepping its output.
+          set +e
+          rebase_output="$(git rebase origin/master 2>&1)"
+          rebase_status=$?
+          set -e
+          echo "${rebase_output}"
+
           {
             echo "RESULT<<EOF"
-            echo $(git rebase origin/master 2>&1)
+            echo "${rebase_output}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-          echo "Rebase completed"
+
+          if [ "${rebase_status}" -eq 0 ]; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            # Leave a clean tree/branch behind for the next scheduled retry.
+            git rebase --abort || true
+          fi
+          echo "Rebase completed with status ${rebase_status}"
 
       - name: Push changes
-        if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated')
+        if: steps.rebase.outputs.success == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
