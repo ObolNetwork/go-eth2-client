@@ -174,7 +174,7 @@ jobs:
           echo "Tagging new obolnetwork/go-eth2-client $tag"
           git -c tag.gpgsign=false tag $tag
           echo "Pushing new obolnetwork/go-eth2-client $tag tag"
-          git push --tags
+          git push origin "refs/tags/${tag}"
           echo "$tag tagged 🚀!"
 
       - name: Verification failed
