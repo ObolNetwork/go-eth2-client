@@ -118,15 +118,31 @@ jobs:
         run: |
           echo "Rebasing branch obol on tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}"
           git fetch
+
+          # Detect success via git's exit code.
+          set +e
+          rebase_output="$(git rebase --onto $(echo $(git log -n 1 --pretty=format:"%H" ${{ needs.fetch_latest_tag.outputs.latest_tag }} )) $(echo $(git log -n 1 --pretty=format:"%H" origin/master)) obol 2>&1)"
+          rebase_status=$?
+          set -e
+          echo "${rebase_output}"
+
           {
             echo "RESULT<<EOF"
-            echo "$(git rebase --onto $(echo $(git log -n 1 --pretty=format:"%H" ${{ needs.fetch_latest_tag.outputs.latest_tag }} )) $(echo $(git log -n 1 --pretty=format:"%H" origin/master)) obol 2>&1)"
+            echo "${rebase_output}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-          echo "Rebase completed"
+
+          if [ "${rebase_status}" -eq 0 ]; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            # Leave a clean tree/branch behind for the next scheduled retry.
+            git rebase --abort || true
+          fi
+          echo "Rebase completed with status ${rebase_status}"
 
       - name: Verify tag equals upstream tag + obol changes
-        if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated') || contains(steps.rebase.outputs.RESULT, 'is up to date.')
+        if: steps.rebase.outputs.success == 'true'
         id: verify
         env:
           LATEST_TAG: ${{ needs.fetch_latest_tag.outputs.latest_tag }}
