@@ -115,13 +115,17 @@ jobs:
         id: rebase
         env:
           GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
+          LATEST_TAG: ${{ needs.fetch_latest_tag.outputs.latest_tag }}
         run: |
-          echo "Rebasing branch obol on tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}"
+          echo "Rebasing branch obol on tag ${LATEST_TAG}"
           git fetch
+
+          tag_commit="$(git rev-parse "${LATEST_TAG}^{commit}")"
+          master_commit="$(git rev-parse origin/master)"
 
           # Detect success via git's exit code.
           set +e
-          rebase_output="$(git rebase --onto $(echo $(git log -n 1 --pretty=format:"%H" ${{ needs.fetch_latest_tag.outputs.latest_tag }} )) $(echo $(git log -n 1 --pretty=format:"%H" origin/master)) obol 2>&1)"
+          rebase_output="$(git rebase --onto "${tag_commit}" "${master_commit}" obol 2>&1)"
           rebase_status=$?
           set -e
           echo "${rebase_output}"
