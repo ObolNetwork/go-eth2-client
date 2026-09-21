@@ -43,6 +43,16 @@ types:
     output: payloadattestationdata_ssz.go
   - name: PayloadAttestationMessage
     output: payloadattestationmessage_ssz.go
+  - name: BuilderRequestAuth
+    output: builderrequestauth_ssz.go
+  - name: SignedBuilderRequestAuth
+    output: signedbuilderrequestauth_ssz.go
+  - name: BuilderEntry
+    output: builderentry_ssz.go
+  - name: BuilderConfig
+    output: builderconfig_ssz.go
+  - name: BuilderPreferencesEntry
+    output: builderpreferencesentry_ssz.go
   - name: ProposerPreferences
     output: proposerpreferences_ssz.go
   - name: SignedAggregateAndProof
