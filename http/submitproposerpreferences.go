@@ -23,11 +23,10 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	apiv1gloas "github.com/attestantio/go-eth2-client/api/v1/gloas"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 )
-
-type proposerPreferencesList []*gloas.SignedProposerPreferences
 
 const staticProposerPreferencesLimit uint64 = 64
 
@@ -56,19 +55,6 @@ func (s *Service) proposerPreferencesLimit(ctx context.Context) (uint64, error) 
 	return (minSeedLookahead + 1) * slotsPerEpoch, nil
 }
 
-func (p proposerPreferencesList) MarshalSSZ() ([]byte, error) {
-	var body []byte
-	for _, preference := range p {
-		encoded, err := preference.MarshalSSZ()
-		if err != nil {
-			return nil, err
-		}
-		body = append(body, encoded...)
-	}
-
-	return body, nil
-}
-
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error {
 	if err := s.assertIsSynced(ctx); err != nil {
@@ -87,9 +73,9 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 		}
 	}
 
-	requestPreferences := proposerPreferencesList(preferences)
+	requestPreferences := apiv1gloas.SignedProposerPreferencesList(preferences)
 	if requestPreferences == nil {
-		requestPreferences = proposerPreferencesList{}
+		requestPreferences = apiv1gloas.SignedProposerPreferencesList{}
 	}
 	body, contentType, err := s.marshalRequestBody(ctx, requestPreferences)
 	if err != nil {

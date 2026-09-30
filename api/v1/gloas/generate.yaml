@@ -7,3 +7,7 @@ types:
     output: blockcontents_ssz.go
   - name: SignedExecutionPayloadEnvelopeContents
     output: signedexecutionpayloadenvelopecontents_ssz.go
+  - name: PayloadAttestationMessages
+    output: payloadattestationmessages_ssz.go
+  - name: SignedProposerPreferencesList
+    output: signedproposerpreferenceslist_ssz.go
