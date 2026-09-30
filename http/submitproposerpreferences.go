@@ -77,7 +77,8 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 	if requestPreferences == nil {
 		requestPreferences = apiv1gloas.SignedProposerPreferencesList{}
 	}
-	body, contentType, err := s.marshalRequestBody(ctx, requestPreferences)
+	// The generated list marshaller has a pointer receiver.
+	body, contentType, err := s.marshalRequestBody(ctx, &requestPreferences)
 	if err != nil {
 		return err
 	}
