@@ -23,11 +23,9 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	apiv1gloas "github.com/attestantio/go-eth2-client/api/v1/gloas"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/gloas"
 )
-
-type proposerPreferencesList []*gloas.SignedProposerPreferences
 
 // staticProposerPreferencesLimit is the mainnet-preset proposer lookahead length,
 // used whenever the chain's own values are not available.
@@ -63,21 +61,6 @@ func (s *Service) proposerPreferencesLimit(ctx context.Context) uint64 {
 	return (minSeedLookahead + 1) * slotsPerEpoch
 }
 
-// MarshalSSZ encodes the list as an SSZ list of fixed-size elements, which is the
-// concatenation of the elements' own encodings.
-func (p proposerPreferencesList) MarshalSSZ() ([]byte, error) {
-	body := make([]byte, 0, len(p)*(&gloas.SignedProposerPreferences{}).SizeSSZ())
-	for _, preference := range p {
-		encoded, err := preference.MarshalSSZ()
-		if err != nil {
-			return nil, err
-		}
-		body = append(body, encoded...)
-	}
-
-	return body, nil
-}
-
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
@@ -103,11 +86,12 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.Submi
 		}
 	}
 
-	requestPreferences := proposerPreferencesList(opts.Preferences)
+	requestPreferences := apiv1gloas.SignedProposerPreferencesList(opts.Preferences)
 	if requestPreferences == nil {
-		requestPreferences = proposerPreferencesList{}
+		requestPreferences = apiv1gloas.SignedProposerPreferencesList{}
 	}
-	body, contentType, err := s.marshalRequestBody(ctx, requestPreferences)
+	// The generated list marshaller has a pointer receiver.
+	body, contentType, err := s.marshalRequestBody(ctx, &requestPreferences)
 	if err != nil {
 		return err
 	}
