@@ -16,13 +16,11 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/stretchr/testify/require"
 )
@@ -63,11 +61,7 @@ func TestBeaconBlockAttestations(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -93,13 +87,9 @@ func TestBeaconBlockAttestationsTimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t)
 
-	_, err = service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{
+	_, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{
 		Common: api.CommonOpts{
 			Timeout: time.Millisecond,
 		},
