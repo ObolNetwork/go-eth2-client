@@ -1,3 +1,6 @@
+dev:
+  - add SubmitBuilderPreferences and the Gloas BuilderPreferencesEntry type with JSON, YAML and SSZ support in http, multi and mock clients
+
 0.30.1:
    - bump dynamic-ssz to v1.4.0
 
