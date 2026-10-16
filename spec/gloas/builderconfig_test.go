@@ -313,8 +313,8 @@ func TestBuilderConfigJSON(t *testing.T) {
 // TestBuilderAPIContainerHashTreeRoots pins the roots of the builder API
 // types, which are regular SSZ containers rather than progressive ones:
 // BuilderRequestAuth and SignedBuilderRequestAuth as defined in builder-specs
-// at commit 61aeca42d9ba8eb467ae230d191ebc1c3f38107d, and BuilderEntry and
-// BuilderConfig as defined in beacon-APIs at commit
+// at commit 61aeca42d9ba8eb467ae230d191ebc1c3f38107d, and BuilderEntry,
+// BuilderConfig and BuilderPreferencesEntry as defined in beacon-APIs at commit
 // 01e99a6530b22941f619bde525cbf8bb61991d42.  The expected roots were
 // independently calculated with eth-ssz-specs 0.1.0, the SSZ library of the
 // consensus-specs PySpec, rather than this repository's generated
@@ -367,6 +367,16 @@ func TestBuilderAPIContainerHashTreeRoots(t *testing.T) {
 				Builders:           []*gloas.BuilderEntry{entry, entry},
 			},
 			root: "5c505a24cf3775610a58ecdaa64a972abe7e1513a92c82d0ced248f4e972ae10",
+		},
+		{
+			name: "BuilderPreferencesEntry",
+			value: &gloas.BuilderPreferencesEntry{
+				ProposerPubkey:      pubkeyA,
+				URL:                 []byte("https://builder.example.com"),
+				Auth:                auth,
+				MaxExecutionPayment: 7,
+			},
+			root: "ef1855a1170d1120b4806665504a5a12313c60d494fbca0d8b8b08922c6c60a2",
 		},
 		{
 			name:  "EmptyBuilderConfig",

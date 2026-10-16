@@ -11,3 +11,5 @@ types:
     output: payloadattestationmessages_ssz.go
   - name: SignedProposerPreferencesList
     output: signedproposerpreferenceslist_ssz.go
+  - name: BuilderPreferencesEntryList
+    output: builderpreferencesentrylist_ssz.go
