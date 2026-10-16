@@ -1242,6 +1242,19 @@ func (s *Erroring) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Subm
 	return next.SubmitExecutionPayloadBid(ctx, opts)
 }
 
+// SubmitBuilderPreferences submits builder preferences.
+func (s *Erroring) SubmitBuilderPreferences(ctx context.Context, preferences []*gloas.BuilderPreferencesEntry) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, ok := s.next.(consensusclient.BuilderPreferencesSubmitter)
+	if !ok {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitBuilderPreferences(ctx, preferences)
+}
+
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Erroring) SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error {
 	if err := s.maybeError(ctx); err != nil {

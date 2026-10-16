@@ -864,6 +864,11 @@ type PayloadAttestationMessagesSubmitter interface {
 	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
 }
 
+// BuilderPreferencesSubmitter is the interface for submitting builder preferences.
+type BuilderPreferencesSubmitter interface {
+	SubmitBuilderPreferences(ctx context.Context, preferences []*gloas.BuilderPreferencesEntry) error
+}
+
 // ProposerPreferencesSubmitter is the interface for submitting proposer preferences.
 type ProposerPreferencesSubmitter interface {
 	SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error

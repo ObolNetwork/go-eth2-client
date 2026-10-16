@@ -944,6 +944,17 @@ func (s *Sleepy) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Submit
 	return next.SubmitExecutionPayloadBid(ctx, opts)
 }
 
+// SubmitBuilderPreferences submits builder preferences.
+func (s *Sleepy) SubmitBuilderPreferences(ctx context.Context, preferences []*gloas.BuilderPreferencesEntry) error {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.BuilderPreferencesSubmitter)
+	if !ok {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitBuilderPreferences(ctx, preferences)
+}
+
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Sleepy) SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error {
 	s.sleep(ctx)
