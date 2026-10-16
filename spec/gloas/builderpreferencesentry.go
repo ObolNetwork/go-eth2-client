@@ -18,8 +18,8 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 // BuilderPreferencesEntry is one builder preferences submission: a proposer's
 // authorization and payment cap for one builder, submitted ahead of the bid request.
 type BuilderPreferencesEntry struct {
-	ProposerPubkey      phase0.BLSPubKey          `ssz-index:"0" ssz-size:"48"`
-	URL                 []byte                    `ssz-index:"1" ssz-max:"2048"`
-	Auth                *SignedBuilderRequestAuth `ssz-index:"2"`
-	MaxExecutionPayment phase0.Gwei               `ssz-index:"3"`
+	ProposerPubkey      phase0.BLSPubKey `ssz-size:"48"`
+	URL                 []byte           `ssz-max:"2048"`
+	Auth                *SignedBuilderRequestAuth
+	MaxExecutionPayment phase0.Gwei
 }

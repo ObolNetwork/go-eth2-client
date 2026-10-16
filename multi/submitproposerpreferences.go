@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"errors"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
@@ -28,7 +29,11 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 		}
 
 		return true, nil
-	}, nil)
+	}, func(_ context.Context, _ consensusclient.Service, err error) (bool, error) {
+		// Invalid input is invalid for every client, so neither fail over nor
+		// deactivate a healthy client because the caller supplied bad preferences.
+		return !errors.Is(err, consensusclient.ErrInvalidOptions), err
+	})
 
 	return err
 }
