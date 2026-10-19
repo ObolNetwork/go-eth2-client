@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"maps"
 	"math/big"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -309,10 +310,13 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	return nil
 }
 
+// builderEntryForURL returns the configured entry the returned builder URL names, nil if none or
+// several do.  The beacon node returns the URL in its own spelling, so URLs are compared as
+// equivalent rather than byte for byte.
 func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
 	var entry *gloas.BuilderEntry
 	for _, candidate := range config.Builders {
-		if string(candidate.URL) == builderURL {
+		if sameBuilderURL(string(candidate.URL), builderURL) {
 			if entry != nil {
 				return nil
 			}
@@ -322,6 +326,27 @@ func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.B
 	}
 
 	return entry
+}
+
+// sameBuilderURL returns whether two builder URLs name the same builder: equal but for the case of
+// the scheme and host, and a trailing slash of the path, which beacon nodes add when they parse
+// a URL.  URLs that fail to parse are compared byte for byte.
+func sameBuilderURL(a, b string) bool {
+	if a == b {
+		return true
+	}
+
+	ua, errA := url.Parse(a)
+	ub, errB := url.Parse(b)
+	if errA != nil || errB != nil {
+		return false
+	}
+
+	return strings.EqualFold(ua.Scheme, ub.Scheme) &&
+		strings.EqualFold(ua.Host, ub.Host) &&
+		ua.User.String() == ub.User.String() &&
+		strings.TrimSuffix(ua.EscapedPath(), "/") == strings.TrimSuffix(ub.EscapedPath(), "/") &&
+		ua.RawQuery == ub.RawQuery
 }
 
 func headerValue(headers map[string]string, name string) string {
