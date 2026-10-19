@@ -134,6 +134,21 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			config:   direct(5, 10),
 			url:      "https://direct.example",
 		},
+		// The beacon node returns the URL in its own spelling, e.g. a trailing slash and a host in
+		// another case, which still names the configured builder.
+		{
+			name:     "DirectValueBeaconNodeSpelling",
+			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			config:   direct(5, 10),
+			url:      "https://Direct.example/",
+		},
+		{
+			name:     "DirectBelowMinimumBeaconNodeSpelling",
+			proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000),
+			config:   direct(2, 13),
+			url:      "https://direct.example/",
+			err:      true,
+		},
 		{
 			name:     "DirectValueWithUncappedPayment",
 			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),

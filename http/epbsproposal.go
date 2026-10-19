@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"maps"
 	"math/big"
+	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -309,10 +311,13 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	return nil
 }
 
+// builderEntryForURL returns the configured entry the returned builder URL names, nil if none or
+// several do.  The beacon node returns the URL in its own spelling, so URLs are compared as
+// equivalent rather than byte for byte.
 func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
 	var entry *gloas.BuilderEntry
 	for _, candidate := range config.Builders {
-		if string(candidate.URL) == builderURL {
+		if sameBuilderURL(string(candidate.URL), builderURL) {
 			if entry != nil {
 				return nil
 			}
@@ -322,6 +327,55 @@ func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.B
 	}
 
 	return entry
+}
+
+// sameBuilderURL returns whether two builder URLs name the same builder once normalised as in
+// RFC 3986 section 6.2, as beacon nodes do when they parse and echo a URL.  URLs that fail to
+// parse are compared byte for byte.
+func sameBuilderURL(a, b string) bool {
+	if a == b {
+		return true
+	}
+
+	ua, okA := normaliseBuilderURL(a)
+	ub, okB := normaliseBuilderURL(b)
+	if !okA || !okB {
+		return false
+	}
+
+	return ua.String() == ub.String()
+}
+
+// defaultPorts are the ports a URL of the scheme has without one (RFC 3986 section 6.2.3).
+var defaultPorts = map[string]string{"http": "80", "https": "443"}
+
+// normaliseBuilderURL applies the syntax- and scheme-based normalisation of RFC 3986 section 6.2:
+// a lowercase scheme and host, no default port, a "/" path for an empty one and no dot segments.
+func normaliseBuilderURL(raw string) (*url.URL, bool) {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return nil, false
+	}
+
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+
+	host := strings.ToLower(parsed.Hostname())
+
+	port := parsed.Port()
+	if port != "" && port != defaultPorts[parsed.Scheme] {
+		host = net.JoinHostPort(host, port)
+	} else if strings.Contains(host, ":") {
+		host = "[" + host + "]" // IPv6 literal without a port.
+	}
+
+	parsed.Host = host
+
+	if parsed.Path == "" && parsed.Host != "" {
+		parsed.Path = "/"
+	}
+
+	// Resolving an empty reference removes the dot segments of the path (RFC 3986 section 5.2.4).
+	return parsed.ResolveReference(&url.URL{RawQuery: parsed.RawQuery, ForceQuery: parsed.ForceQuery}), true
 }
 
 func headerValue(headers map[string]string, name string) string {
